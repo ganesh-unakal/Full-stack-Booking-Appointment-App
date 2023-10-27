@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add usert</title>
+</head>
+<body>
+    <h1>Booking Appointment</h1>
+    <form  onsubmit="userDetails(event)">
+        <label>UserName:</label>
+        <input type="text"  id="username"/>
+        <br />
+
+        <label>Mobile Number:</label>
+        <input type="tel" id="phone"/>
+        <br />
+
+        <label>EMail:</label>
+        <input type="email" id="email"/>
+        <br />
+
+        <button type="submit">submit</button>
+    </form>
+
+    <ul id="listofusers"></ul>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.2.5/axios.min.js"></script>
+
+    <script>
+        function userDetails(event){
+            event.preventDefault();
+            const name = event.target.username.value;
+            const phone = event.target.phone.value;
+            const email = event.target.email.value;
+
+            const obj = {
+                name,
+                phone,
+                email,
+            };
+            console.log(obj)
+
+            axios.post("http://localhost:3000/admin/add-user",obj)
+            .then((response) => {
+                console.log(response);
+                showUserOnScreen(response.data.newUserDetails);
+            })
+            .catch((err) => {
+                document.body.innerHTML = document.body.innerHTML + "<h4>Something Went Wrong</h4>"
+            })
+        };
+
+        window.addEventListener('DOMContentLoaded' , () => {
+            axios.get('http://localhost:3000/admin/getuser')
+            .then((res)=> {
+                console.log('receiving data from bakend',res)
+
+                for(let i =0 ; i<res.data.allUsers.length; i++){
+                    showUserOnScreen(res.data.allUsers[i])
+                }
+            }).catch((err) => {
+                document.body.innerHTML = document.body.innerHTML + '<h4>Somthing went wrong</h4>';
+            })
+        });
+
+
+        function showUserOnScreen(user) {
+            document.getElementById("username").value ="";
+            document.getElementById("email").value="";
+            document.getElementById("phone").value="";
+
+            let parent = document.getElementById("listofusers");
+
+            let child = `<li id= ${user.id}> ${user.name} - ${user.email} - ${user.phone}
+                <button onclick=deleteUser('${user.id}')>Delete</button>`;
+                parent.innerHTML = parent.innerHTML + child
+        };
+
+
+        function deleteUser(userId) {
+            axios.delete(`http://localhost:3000/user/delete-user/${userId}`)
+            .then(()=>{
+                removeUserFromScreen(userId)
+            })
+            .catch((err)=>{
+                console.log("b", userId)
+                document.body.innerHTML = document.body.innerHTML + "<h4>Something went wrong</h4>"
+            })
+        };
+
+        function removeUserFromScreen(id){
+            const parent = document.getElementById('listofusers')
+            const child = document.getElementById(id)
+            parent.removeChild(child)
+        }
+    </script>
+
+
+</body>
+</html>
